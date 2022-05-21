@@ -12,6 +12,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Mocking MarketService for unit tests
+ */
 public class TestMarketService implements MarketService {
     public static final int LOT = 10;
     private final HashMap<String, PortfolioPosition> portfolioPositions = new HashMap<>();

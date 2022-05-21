@@ -1,23 +1,21 @@
 package org.zaretkim.dividendsrobot.service;
 
-import com.google.protobuf.Timestamp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import ru.tinkoff.piapi.contract.v1.*;
-import ru.tinkoff.piapi.core.InstrumentsService;
 import ru.tinkoff.piapi.core.InvestApi;
-import ru.tinkoff.piapi.core.MarketDataService;
 import ru.tinkoff.piapi.core.SandboxService;
 
-import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Implements MarketService for sandbox account
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

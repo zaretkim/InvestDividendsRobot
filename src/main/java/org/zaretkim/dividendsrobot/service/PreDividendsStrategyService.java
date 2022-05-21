@@ -20,10 +20,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * PreDividend strategy implementation. On every @step run finds shares which hava actual declared dividends
+ * with yield higher than @minDividendYield and opens positions for them. Close positions when they have
+ * at least @sufficientProfit profit or last buy date for the dividends is reached. @step is executed once a day
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class StrategyService {
+public class PreDividendsStrategyService {
     @Setter
     private MarketService marketService;
     @Value("${app.config.sufficient-profit}")
@@ -70,6 +75,10 @@ public class StrategyService {
         this.minDividendYield = minDividendYield;
     }
 
+    /**
+     * Executes next step for the strategy
+     * @return true if step is successfully executed or false if any error happened
+     */
     public boolean step() {
 
         try {
@@ -121,8 +130,11 @@ public class StrategyService {
         return ideas;
     }
 
-
-
+    /**
+     * Creates "buy" orders for figis from @dividendsFigis
+     * @param portfolio current portfolio
+     * @param dividendsFigis figis to buy
+     */
     private void openNewPositions(PortfolioResponse portfolio, Set<String> dividendsFigis) {
         HashSet<String> figisToOpen = new HashSet<>(dividendsFigis);
         for (PortfolioPosition portfolioPosition : portfolio.getPositionsList()) {

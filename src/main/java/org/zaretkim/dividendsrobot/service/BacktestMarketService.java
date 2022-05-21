@@ -17,6 +17,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Lazily loads historical data and use it to implement MarketService operations.
+ * Use @setFakeNow method to set fake "now" date to get data for that date
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

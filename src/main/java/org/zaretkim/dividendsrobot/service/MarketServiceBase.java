@@ -12,6 +12,9 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+/**
+ * Common operations for @{@link RealMarketService} and @{@link SandboxMarketService}
+ */
 @Slf4j
 public abstract class MarketServiceBase implements MarketService {
     @Value("${app.config.token}")

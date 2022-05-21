@@ -1,12 +1,11 @@
 package org.zaretkim.dividendsrobot.test;
 
 import org.junit.jupiter.api.Test;
-import org.zaretkim.dividendsrobot.service.MarketService;
-import org.zaretkim.dividendsrobot.service.StrategyService;
+import org.zaretkim.dividendsrobot.service.PreDividendsStrategyService;
 
 import java.time.temporal.ChronoUnit;
 
-public class StrategyServiceTest {
+public class PreDividendsStrategyServiceTest {
     private static final String TEST_FIGI = "TEST_FIGI";
     private static final int INITIAL_CASH = 1000000;
     private static final double MAX_POSITION_PERCENTAGE = 20;
@@ -65,7 +64,6 @@ public class StrategyServiceTest {
         var testMarketService = new TestMarketService();
         var strategyService = createStrategyWithDefaultConfiguration(testMarketService);
 
-        var now = testMarketService.now();
         testMarketService.setLastPrice(TEST_FIGI, 100);
         var numberOfLots = 2;
         testMarketService.addPosition(TEST_FIGI, numberOfLots * TestMarketService.LOT, MIN_DIVIDEND_YIELD);
@@ -76,8 +74,8 @@ public class StrategyServiceTest {
         testMarketService.assertAllSellsAndBuysAreDone();
     }
 
-    private StrategyService createStrategyWithDefaultConfiguration(TestMarketService marketService) {
-        var strategyService = new StrategyService();
+    private PreDividendsStrategyService createStrategyWithDefaultConfiguration(TestMarketService marketService) {
+        var strategyService = new PreDividendsStrategyService();
         strategyService.setMarketService(marketService);
         marketService.setCash(INITIAL_CASH);
         strategyService.setAllowedFigis(TEST_FIGI);

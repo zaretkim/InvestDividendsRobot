@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import ru.tinkoff.piapi.contract.v1.*;
 import ru.tinkoff.piapi.core.InvestApi;
 import ru.tinkoff.piapi.core.OrdersService;
-import ru.tinkoff.piapi.core.models.Portfolio;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -16,6 +15,9 @@ import java.util.UUID;
 
 import static ru.tinkoff.piapi.core.utils.Helpers.unaryCall;
 
+/**
+ * MarketService implementation for real exchange account
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
