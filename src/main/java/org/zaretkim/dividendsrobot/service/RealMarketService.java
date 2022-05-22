@@ -112,6 +112,19 @@ public class RealMarketService extends MarketServiceBase {
         var investApi = getInvestApi();
         if (investApi.isReadonlyMode())
             return "Token is not valid for real market. It is readonly.";
-        return null;
+
+        if (accountId == null || accountId.isBlank())
+            return "Please configure parameter \"market-account\" in src/main/resources/application.yaml";
+
+        List<Account> accounts = investApi.getUserService().getAccountsSync();
+        for (var account: accounts) {
+            if (account.getId().equals(accountId)) {
+                if (account.getAccessLevel() == AccessLevel.ACCOUNT_ACCESS_LEVEL_FULL_ACCESS)
+                    return "Invalid account. Token does not provide full access for it";
+                return null;
+            }
+        }
+
+        return "Account not found. Please check configuration in src/main/resources/application.yaml";
     }
 }

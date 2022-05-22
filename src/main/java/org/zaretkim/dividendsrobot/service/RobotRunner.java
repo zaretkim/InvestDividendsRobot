@@ -110,7 +110,7 @@ public class RobotRunner {
                     executeRobotStepWithRescheduleOnError(tryNumber + 1);
                 }
             };
-            final int in_30_minutes = 3 * 60 * 1000;
+            final int in_30_minutes = 30 * 60 * 1000;
             timer.schedule(timerTask,  in_30_minutes);
         }
     }

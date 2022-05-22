@@ -51,24 +51,29 @@ public class ApplicationController {
         if (validateTokenErrorMessage != null) {
             return validateTokenErrorMessage;
         }
+
         if (force == null) {
-            PortfolioResponse portfolio = realMarketService.getPortfolio();
-            var hasOpenPosition = portfolio.getPositionsList().size() > 0;
-            var cash = MapperUtils.moneyValueToBigDecimal(portfolio.getTotalAmountCurrencies());
-            var sharesAmount = MapperUtils.moneyValueToBigDecimal(portfolio.getTotalAmountShares());
-            var totalFunds = cash.add(sharesAmount);
-            final int minimalRecommendedFunds = 10000;
-            var messageBuilder = new StringBuilder();
-            if (hasOpenPosition)
-                messageBuilder.append("Warning: account has open positions which can be close by robot<br>");
-            if (totalFunds.compareTo(BigDecimal.valueOf(minimalRecommendedFunds)) < 0)
-                messageBuilder.append("Warning: account has not enough funds (").append(totalFunds).append("). It is recommended to have at least ").append(minimalRecommendedFunds).append("<br>");
-            if (messageBuilder.length() > 0) {
-                {
-                    messageBuilder.append("Robot is not started<br>");
-                    messageBuilder.append("To start robot anyway <a href=\"/start?force=true\">click here</a>");
-                    return messageBuilder.toString();
+            try {
+                PortfolioResponse portfolio = realMarketService.getPortfolio();
+                var hasOpenPosition = portfolio.getPositionsList().size() > 0;
+                var cash = MapperUtils.moneyValueToBigDecimal(portfolio.getTotalAmountCurrencies());
+                var sharesAmount = MapperUtils.moneyValueToBigDecimal(portfolio.getTotalAmountShares());
+                var totalFunds = cash.add(sharesAmount);
+                final int minimalRecommendedFunds = 10000;
+                var messageBuilder = new StringBuilder();
+                if (hasOpenPosition)
+                    messageBuilder.append("Warning: account has open positions which can be close by robot<br>");
+                if (totalFunds.compareTo(BigDecimal.valueOf(minimalRecommendedFunds)) < 0)
+                    messageBuilder.append("Warning: account has not enough funds (").append(totalFunds).append("). It is recommended to have at least ").append(minimalRecommendedFunds).append("<br>");
+                if (messageBuilder.length() > 0) {
+                    {
+                        messageBuilder.append("Robot is not started<br>");
+                        messageBuilder.append("To start robot anyway <a href=\"/start?force=true\">click here</a>");
+                        return messageBuilder.toString();
+                    }
                 }
+            } catch (Throwable t) {
+                log.info(t.getMessage(), t);
             }
         }
 
