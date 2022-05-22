@@ -7,9 +7,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.zaretkim.dividendsrobot.service.*;
 import ru.tinkoff.piapi.contract.v1.PortfolioPosition;
+import ru.tinkoff.piapi.contract.v1.PortfolioResponse;
 import ru.tinkoff.piapi.contract.v1.Share;
 import ru.tinkoff.piapi.core.utils.MapperUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -44,18 +46,39 @@ public class ApplicationController {
     }
 
     @GetMapping("/start")
-    public String start() {
+    public String start(String force) {
         String validateTokenErrorMessage = realMarketService.validateToken();
         if (validateTokenErrorMessage != null) {
             return validateTokenErrorMessage;
+        }
+        if (force == null) {
+            PortfolioResponse portfolio = realMarketService.getPortfolio();
+            var hasOpenPosition = portfolio.getPositionsList().size() > 0;
+            var cash = MapperUtils.moneyValueToBigDecimal(portfolio.getTotalAmountCurrencies());
+            var sharesAmount = MapperUtils.moneyValueToBigDecimal(portfolio.getTotalAmountShares());
+            var totalFunds = cash.add(sharesAmount);
+            final int minimalRecommendedFunds = 10000;
+            var messageBuilder = new StringBuilder();
+            if (hasOpenPosition)
+                messageBuilder.append("Warning: account has open positions which can be close by robot<br>");
+            if (totalFunds.compareTo(BigDecimal.valueOf(minimalRecommendedFunds)) < 0)
+                messageBuilder.append("Warning: account has not enough funds (").append(totalFunds).append("). It is recommended to have at least ").append(minimalRecommendedFunds).append("<br>");
+            if (messageBuilder.length() > 0) {
+                {
+                    messageBuilder.append("Robot is not started<br>");
+                    messageBuilder.append("To start robot anyway <a href=\"/start?force=true\">click here</a>");
+                    return messageBuilder.toString();
+                }
+            }
         }
 
         return robotRunner.start();
     }
 
     @GetMapping("/stop")
-    public void stopRunningRobot() {
+    public String stopRunningRobot() {
         robotRunner.stopRunningRobot();
+        return "Robot is stopped";
     }
 
     @GetMapping("/startBacktest")
@@ -90,6 +113,10 @@ public class ApplicationController {
 
         List<PortfolioPosition> positionsList = portfolio.getPositionsList();
         sb.append("<tr><td> Number of open positions: ").append(positionsList.size()).append("</td></tr>");
+        if (portfolio.hasExpectedYield()) {
+            var expectedYield = MapperUtils.quotationToBigDecimal(portfolio.getExpectedYield());
+            sb.append("<tr><td> Expected yield: ").append(expectedYield).append("</td></tr>");
+        }
         sb.append("</table>");
         if (positionsList.size() > 0) {
             sb.append("<table>");

@@ -42,7 +42,7 @@ public class RealMarketService extends MarketServiceBase {
     @Override
     public PortfolioResponse getPortfolio() {
         var request = PortfolioRequest.newBuilder().setAccountId(accountId).build();
-        return unaryCall(() -> operationsBlockingStub.getPortfolio(request));
+        return unaryCall(() -> getOperationsBlocking().getPortfolio(request));
     }
 
     @Override
