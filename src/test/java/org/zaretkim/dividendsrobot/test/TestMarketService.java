@@ -20,7 +20,9 @@ public class TestMarketService implements MarketService {
     private final HashMap<String, PortfolioPosition> portfolioPositions = new HashMap<>();
     private BigDecimal cash = BigDecimal.valueOf(100000);
     private final HashMap<String, Integer> expectedSells = new HashMap<>();
+    private final List<String> unexpectedSells = new ArrayList<>();
     private final HashMap<String, Integer> expectedBuys = new HashMap<>();
+    private final List<String> unexpectedBuys = new ArrayList<>();
     private boolean isWorkingHours = true;
     private final Instant fakeNow = Instant.now();
     private final HashMap<String, List<Dividend>> dividendMap = new HashMap<>();
@@ -97,8 +99,9 @@ public class TestMarketService implements MarketService {
     @Override
     public String sellMarket(String figi, int numberOfLots) {
         Integer expectedNumber = expectedSells.remove(figi);
-        if (expectedNumber == null || expectedNumber != numberOfLots)
-            throw new AssertionError("Unexpected sell operation for " + figi);
+        if (expectedNumber == null || expectedNumber != numberOfLots) {
+            unexpectedSells.add(figi);
+        }
         return null;
     }
 
@@ -106,14 +109,31 @@ public class TestMarketService implements MarketService {
     public String buyMarket(String figi, int numberOfLots) {
         Integer expectedNumber = expectedBuys.remove(figi);
         if (expectedNumber == null || expectedNumber != numberOfLots)
-            throw new AssertionError("Unexpected sell operation for " + figi);
+            unexpectedBuys.add(figi);
         return null;
     }
 
     public void assertAllSellsAndBuysAreDone() {
         if (expectedBuys.size() > 0 || expectedSells.size() > 0)
             throw new AssertionError("Not all expected operations are done");
+        if (unexpectedSells.size() > 0)
+            throw new AssertionError("Unexpected sells for figies: " + listToString(unexpectedSells, ", "));
+        if (unexpectedBuys.size() > 0)
+            throw new AssertionError("Unexpected sells for figies: " + listToString(unexpectedBuys, ", "));
     }
+
+    private String listToString(List<?> list, String separator) {
+        var sb = new StringBuilder();
+        var first = true;
+        for (var o: list) {
+            if (!first)
+                sb.append(separator);
+            sb.append(o.toString());
+            first = false;
+        }
+        return sb.toString();
+    }
+
     @Override
     public List<OrderState> getOrders() {
         return Collections.emptyList();
@@ -141,12 +161,18 @@ public class TestMarketService implements MarketService {
         expectedBuys.put(figi, count);
     }
 
-    public void addPosition(String figi, int numberOfShares, double expectedYield) {
+    public void addPosition(String figi, int numberOfLots, double averagePrice, double currentPrice) {
         var portfolioPosition = PortfolioPosition.newBuilder().setFigi(figi).
-                setQuantity(MapperUtils.bigDecimalToQuotation(BigDecimal.valueOf(numberOfShares))).
-                setExpectedYield(MapperUtils.bigDecimalToQuotation(BigDecimal.valueOf(expectedYield))).
+                setQuantityLots(MapperUtils.bigDecimalToQuotation(BigDecimal.valueOf(numberOfLots))).
+                setAveragePositionPrice(moneyValueFromDouble(averagePrice)).
+                setCurrentPrice(moneyValueFromDouble(currentPrice)).
                 setInstrumentType("share").
                 build();
         portfolioPositions.put(figi, portfolioPosition);
+    }
+
+    private MoneyValue moneyValueFromDouble(double value) {
+        var v1 = MapperUtils.bigDecimalToMoneyValue(BigDecimal.valueOf(value));
+        return MoneyValue.newBuilder(v1).setCurrency("RUB").build();
     }
 }

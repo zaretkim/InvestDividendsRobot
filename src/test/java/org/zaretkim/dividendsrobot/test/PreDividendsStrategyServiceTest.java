@@ -49,9 +49,10 @@ public class PreDividendsStrategyServiceTest {
 
         var now = testMarketService.now();
         testMarketService.addDividend(TEST_FIGI, now.minus(1, ChronoUnit.DAYS), 10);
-        testMarketService.setLastPrice(TEST_FIGI, 100);
+        var lastPrice = 107;
+        testMarketService.setLastPrice(TEST_FIGI, lastPrice);
         var numberOfLots = 2;
-        testMarketService.addPosition(TEST_FIGI, numberOfLots * TestMarketService.LOT, 0.07);
+        testMarketService.addPosition(TEST_FIGI, numberOfLots, 100, lastPrice);
         testMarketService.expectedSell(TEST_FIGI, numberOfLots);
 
         strategyService.step();
@@ -64,9 +65,10 @@ public class PreDividendsStrategyServiceTest {
         var testMarketService = new TestMarketService();
         var strategyService = createStrategyWithDefaultConfiguration(testMarketService);
 
-        testMarketService.setLastPrice(TEST_FIGI, 100);
+        var lastPrice = 100 + MIN_DIVIDEND_YIELD;
+        testMarketService.setLastPrice(TEST_FIGI, lastPrice);
         var numberOfLots = 2;
-        testMarketService.addPosition(TEST_FIGI, numberOfLots * TestMarketService.LOT, MIN_DIVIDEND_YIELD);
+        testMarketService.addPosition(TEST_FIGI, numberOfLots, 100, lastPrice);
         testMarketService.expectedSell(TEST_FIGI, numberOfLots);
 
         strategyService.step();

@@ -176,16 +176,36 @@ public class PreDividendsStrategyService {
             if (!"share".equals(instrumentType)) continue;
             if (dividendIdeaFigis.contains(portfolioPosition.getFigi())) continue;
             try {
-                BigDecimal expectedYield = MapperUtils.quotationToBigDecimal(portfolioPosition.getExpectedYield());
+                BigDecimal expectedYield = calculateExpectedYield(portfolioPosition);
                 if (expectedYield.compareTo(BigDecimal.valueOf(sufficientProfit)) <= 0 && hasTimeBeforeLastBuyDate(portfolioPosition.getFigi()))
                     continue;
 
                 marketService.sellMarket(portfolioPosition.getFigi(), (int) portfolioPosition.getQuantityLots().getUnits());
             } catch (Throwable e) {
-                log.info("Failed to process {}, error: {}", portfolioPosition.getFigi(), e.getMessage());
+                log.info("Failed to process {}, error: {}", portfolioPosition.getFigi(), e.getMessage(), e);
             }
         }
 
+    }
+
+    /**
+     * Calculate expected yield for the position in percents
+     * @param portfolioPosition position for which yield is to be calculated
+     * @return expected yield in percents
+     */
+    public BigDecimal calculateExpectedYield(PortfolioPosition portfolioPosition) {
+        MoneyValue averagePositionPrice = portfolioPosition.getAveragePositionPrice();
+        BigDecimal currentPrice;
+        if (portfolioPosition.hasCurrentPrice()) {
+            currentPrice = MapperUtils.moneyValueToBigDecimal(portfolioPosition.getCurrentPrice());
+        } else {
+            Quotation lastPrice = marketService.getLastPricesSync(portfolioPosition.getFigi()).getPrice();
+            var currentPriceMoneyValue = MoneyValue.newBuilder(averagePositionPrice).setUnits(lastPrice.getUnits()).setNano(lastPrice.getNano()).build();
+            currentPrice = MapperUtils.moneyValueToBigDecimal(currentPriceMoneyValue);
+        }
+
+        BigDecimal averagePrice = MapperUtils.moneyValueToBigDecimal(averagePositionPrice);
+        return currentPrice.subtract(averagePrice).divide(averagePrice, RoundingMode.CEILING).multiply(BigDecimal.valueOf(100));
     }
 
     public boolean hasTimeBeforeLastBuyDate(String figi) {

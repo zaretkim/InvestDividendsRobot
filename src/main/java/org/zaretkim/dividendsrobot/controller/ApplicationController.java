@@ -62,7 +62,7 @@ public class ApplicationController {
                 final int minimalRecommendedFunds = 10000;
                 var messageBuilder = new StringBuilder();
                 if (hasOpenPosition)
-                    messageBuilder.append("Warning: account has open positions which can be close by robot<br>");
+                    messageBuilder.append("Warning: account has open positions which can be closed by robot<br>");
                 if (totalFunds.compareTo(BigDecimal.valueOf(minimalRecommendedFunds)) < 0)
                     messageBuilder.append("Warning: account has not enough funds (").append(totalFunds).append("). It is recommended to have at least ").append(minimalRecommendedFunds).append("<br>");
                 if (messageBuilder.length() > 0) {
@@ -133,9 +133,11 @@ public class ApplicationController {
                 Share share = marketService.getShareByFigiSync(figi);
                 var numberOfShares = portfolioPosition.getQuantityLots().getUnits() * share.getLot();
                 String sYield = "unknown";
-                if (portfolioPosition.hasExpectedYield())
-                    sYield = MapperUtils.quotationToBigDecimal(portfolioPosition.getExpectedYield()).toString();
-                sb.append("<tr><td>").append(share.getName()).append("</td><td>").append(numberOfShares).append("</td><td>").append(sYield).append("</td></tr>");
+                if (portfolioPosition.hasAveragePositionPrice())
+                {
+                    sYield = preDividendsStrategyService.calculateExpectedYield(portfolioPosition).toString();
+                }
+                sb.append("<tr><td>").append(share.getName()).append("</td><td>").append(numberOfShares).append("</td><td>").append(sYield).append("%</td></tr>");
             }
 
             sb.append("</table>");
@@ -218,7 +220,7 @@ public class ApplicationController {
         for (var figi: figis.split("\\s+")) {
             try {
                 Share share = backtestMarketService.getShareByFigiSync(figi);
-                if (share.getExchange().equals(RealMarketService.MOEX_EXCHANGE))
+                if (share.getExchange().startsWith(RealMarketService.MOEX_EXCHANGE))
                     validFigis.append(figi).append(' ');
                 else
                 {

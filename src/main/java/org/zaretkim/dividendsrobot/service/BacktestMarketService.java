@@ -37,15 +37,22 @@ public class BacktestMarketService extends MarketServiceBase {
     @Override
     public PortfolioResponse getPortfolio() {
         BigDecimal totalSharesCount = BigDecimal.ZERO;
+        List<PortfolioPosition> positionsWithUpdatedCurrentPrice = new ArrayList<>();
         for (PortfolioPosition position: portfolioPositions.values()) {
             var figi = position.getFigi();
             var price = getLastPricesSync(figi);
             var quantity = position.getQuantity();
             var amount = MapperUtils.quotationToBigDecimal(price.getPrice()).multiply(BigDecimal.valueOf(quantity.getUnits()));
             totalSharesCount = totalSharesCount.add(amount);
+            var lastPrice = getLastPricesSync(position.getFigi());
+            var currentPrice = MoneyValue.newBuilder().setCurrency(position.getAveragePositionPrice().getCurrency()).
+                    setUnits(lastPrice.getPrice().getUnits()).
+                    setNano(lastPrice.getPrice().getNano()).build();
+            var newPosition = PortfolioPosition.newBuilder(position).setCurrentPrice(currentPrice).build();
+            positionsWithUpdatedCurrentPrice.add(newPosition);
         }
         return PortfolioResponse.newBuilder().
-                addAllPositions(portfolioPositions.values()).
+                addAllPositions(positionsWithUpdatedCurrentPrice).
                 setTotalAmountShares(MapperUtils.bigDecimalToMoneyValue(totalSharesCount)).
                 setTotalAmountCurrencies(MapperUtils.bigDecimalToMoneyValue(cash)).
                 build();
@@ -117,9 +124,14 @@ public class BacktestMarketService extends MarketServiceBase {
         if (portfolioPositions.containsKey(figi)) {
             throw new RuntimeException("Cannot buy new shares to existing position");
         }
+        var averagePrice = MoneyValue.newBuilder().setCurrency(share.getCurrency()).
+                setUnits(lastPrice.getPrice().getUnits()).
+                setNano(lastPrice.getPrice().getNano()).build();
         var newPosition = PortfolioPosition.newBuilder().
                 setFigi(figi).
                 setInstrumentType("share").
+                setAveragePositionPrice(averagePrice).
+                setCurrentPrice(averagePrice).
                 setQuantity(MapperUtils.bigDecimalToQuotation(BigDecimal.valueOf(numberOfShares))).
                 setQuantityLots(MapperUtils.bigDecimalToQuotation(BigDecimal.valueOf(numberOfLots))).
                 build();
