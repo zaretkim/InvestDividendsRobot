@@ -119,7 +119,7 @@ public class RealMarketService extends MarketServiceBase {
         List<Account> accounts = investApi.getUserService().getAccountsSync();
         for (var account: accounts) {
             if (account.getId().equals(accountId)) {
-                if (account.getAccessLevel() == AccessLevel.ACCOUNT_ACCESS_LEVEL_FULL_ACCESS)
+                if (account.getAccessLevel() != AccessLevel.ACCOUNT_ACCESS_LEVEL_FULL_ACCESS)
                     return "Invalid account. Token does not provide full access for it";
                 return null;
             }
