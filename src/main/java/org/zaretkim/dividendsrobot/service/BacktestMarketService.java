@@ -28,12 +28,19 @@ public class BacktestMarketService extends MarketServiceBase {
     private static final String CONTROL_FIGI = "BBG004730RP0"; // Gazprom figi
     private InvestApi investApi;
     private Instant fakeNow;
-    private final HashMap<String, PortfolioPosition> portfolioPositions = new HashMap<>();
-    private final HashMap<String, List<Dividend>> historicalDividends = new HashMap<>();
-    private final HashMap<String, Share> sharesMap = new HashMap<>();
-    private final HashMap<String, List<HistoricCandle>> historicalCandles = new HashMap<>();
+    private HashMap<String, PortfolioPosition> portfolioPositions = new HashMap<>();
+    private HashMap<String, List<Dividend>> historicalDividends = new HashMap<>();
+    private HashMap<String, Share> sharesMap = new HashMap<>();
+    private HashMap<String, List<HistoricCandle>> historicalCandles = new HashMap<>();
     private BigDecimal cash = BigDecimal.valueOf(100000);
 
+    public void Reset() {
+        portfolioPositions = new HashMap<>();
+        historicalDividends = new HashMap<>();
+        sharesMap = new HashMap<>();
+        historicalCandles = new HashMap<>();
+        cash = BigDecimal.valueOf(100000);
+    }
     @Override
     public PortfolioResponse getPortfolio() {
         BigDecimal totalSharesCount = BigDecimal.ZERO;

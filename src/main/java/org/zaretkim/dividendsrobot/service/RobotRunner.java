@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -49,17 +51,32 @@ public class RobotRunner {
     }
 
     public String startBacktest() {
+        backtestMarketService.Reset();
         preDividendsStrategyService.setMarketService(backtestMarketService);
         final int backDays = 365;
+        var sb = new StringBuilder();
+        BigDecimal initialFunds = preDividendsStrategyService.totalAmountOfFunds(backtestMarketService.getPortfolio());
+        sb.append("Backtest is started with initial funds ").
+                append(initialFunds).
+                append(" on historical data for the last ").append(backDays).append(" days<br>");
         LocalDateTime localDateTime = LocalDateTime.now().minus(backDays, ChronoUnit.DAYS);
 
         Instant fakeTime = localDateTime.toInstant(ZoneOffset.of("+03:00:00"));
-        for (int i = 0; i < backDays; i++) {
-            backtestMarketService.setFakeNow(fakeTime);
-            preDividendsStrategyService.step();
-            fakeTime = fakeTime.plus(1, ChronoUnit.DAYS);
+        try {
+            for (int i = 0; i < backDays; i++) {
+                backtestMarketService.setFakeNow(fakeTime);
+                preDividendsStrategyService.step();
+                fakeTime = fakeTime.plus(1, ChronoUnit.DAYS);
+            }
+        } catch (Throwable t) {
+            log.info(t.getMessage(), t);
+            return "Please, try again later. Backtest failed with error: " + t.getMessage();
         }
-        return preDividendsStrategyService.totalAmountOfFunds(backtestMarketService.getPortfolio()).toString();
+        var result = preDividendsStrategyService.totalAmountOfFunds(backtestMarketService.getPortfolio());
+        sb.append("Final result: ").append(result).append("<br>");
+        var yield = result.subtract(initialFunds).divide(initialFunds, RoundingMode.CEILING).multiply(BigDecimal.valueOf(100));
+        sb.append("Yield: ").append(yield).append("%");
+        return sb.toString();
     }
 
     public void stopRunningRobot() {
